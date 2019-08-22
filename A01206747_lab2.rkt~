@@ -1,0 +1,7 @@
+#lang racket
+(define (power-head b e)
+  (cond
+    [(= 0 e) 1]
+    [else ( * b (power-head b (- e 1)))]))
+
+(power-head 4 3)
