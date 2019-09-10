@@ -100,7 +100,7 @@
       [else
        (cond
          [(eq?(diff-helper (first lA) lB) false) l (append (helper (rest lA) lB l) (list (first lA)))]
-         [else (difference (rest lA) lB)])]))
+         [else (helper (rest lA) lB l)])]))
   (helper lA lB '()))
 
 (define (diff-helper item lB)

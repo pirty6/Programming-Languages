@@ -1,0 +1,75 @@
+;; ITESM QRO
+;; Mariana Perez Garcia A01206747
+;; Lab 2
+
+#lang racket
+
+;; deep-all-x?: tree number -> boolean
+;; Function that receives a list containing other lists and an x element. The function
+;; returns true if all the elements in the list of list are x. Otherwise returns false
+(define (deep-all-x? tree x)
+  (cond
+    [(empty? tree) #t]
+    [(not (eq? (first tree) x)) #f]
+    [else (deep-all-x-branch? (rest tree) x)]))
+
+(define (deep-all-x-branch? branch x)
+  (cond
+    [(empty? branch) #t]
+    [(and (deep-all-x? (first branch) x) (deep-all-x-branch? (rest branch) x)) #t]
+    [else #f]))
+;; Example: (deep-all-x? '(a(a(a)(a))(a(a)(a))) 'a) =  #t
+
+;; deep-reverse: tree -> tree
+;; Function that receives a deep list and returns a list of lists with its elements
+;; in reverse
+(define (deep-reverse tree)
+  (define (helper original new)
+    (cond
+      [(empty? original) new]
+      [(list? (first original)) (helper (rest original) (cons (invert(first original)) new))]
+      [else (helper (rest original) (cons (first original) new))]))
+  (helper tree '()))
+
+(define (invert l)
+    (cond
+      [(empty? l) l]
+      [else l (append (invert (rest l)) (list (first l)))]))
+;; Example: (deep-reverse '(a (b (c) (d)) (e (f) (g)))) = '(((g) (f) e) ((d) (c) b) a)
+
+                                                              
+;; Flatten: tree -> list
+;; Function that receives a deep list and returns a list containing all the elements
+;; in a single 1 level list
+
+(define (flatten tree)
+  (cond
+    [(empty? tree) '()]
+    [else (cons (first tree) (flatten-branch (rest tree)))]))
+
+(define (flatten-branch branch)
+  (cond
+    [(empty? branch) '()]
+    [else (append (flatten (first branch)) (flatten-branch (rest branch)))]))
+;; Example: (flatten '(a (b (c)(d))(e(f)(g)))) = '(a b c d e f g)
+
+;; Count-levels: tree -> number
+;; Function that receives a deep list and returns the max depth of the tree
+(define (count-levels tree)
+  (cond
+    [(empty? tree) 
+
+
+;;Test Cases
+"Deep all x? '(a(b(c)(d))(f(g)(h))) 'a"
+(deep-all-x? '(a(b(c)(d))(f(g)(h))) 'a)
+"Deep all x? '(a(a(a)(a))(a(a)(a))) 'a"
+(deep-all-x? '(a(a(a)(a))(a(a)(a))) 'a)
+"Deep all x? '(a(a(a)(b))(a(a)(a))) 'a"
+(deep-all-x? '(a(a(a)(b))(a(a)(a))) 'a)
+
+"Deep-reverse '(a (b (c) (d)) (e (f) (g)))"
+(deep-reverse '(a (b (c) (d)) (e (f) (g))))
+
+"Flatten '(a (b (c)(d))(e(f)(g)))"
+(flatten '(a (b (c)(d))(e(f)(g))))

@@ -1,0 +1,22 @@
+#lang racket
+(define (leaf? node)
+  (cond
+    [(empty? (rest node)) #t]
+    [else #f]))
+
+(define (leafs tree)
+  (cond
+    [(empty? tree) '()]
+    [(leaf? tree) (first tree)]
+    [else (leafs-branch(rest tree))]))
+
+(define (leafs-branch branch)
+  (cond
+    [(empty? branch) '()]
+    [else (flatten (cons (leafs(first branch))(leafs-branch(rest branch))))]))
+
+(define t'(8(5(2)(7))(11(9))))
+(leafs t)
+
+(leafs '(8(5(2)(7))))
+(leafs '(8(5(2)(7))(11(9)(61))))
