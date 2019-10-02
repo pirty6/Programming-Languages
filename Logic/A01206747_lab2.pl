@@ -15,8 +15,10 @@ any_positive([Head | Tail]):-
 % to X is change into the X value otherwise the value stays the same,
 % the function returns in the empty variable a new list with the new values.
 substitute(_, _, [], []). % Base case where the list is empty
+
 substitute(X, Y, [X | Tail], [Y | Result]):- % If the head of the list is equal to X then append to the result the Y value
   substitute(X, Y, Tail, Result).
+
 substitute(X, Y, [Head | Tail], [Head | Result]):- % If the head of the list is not equal to X then append head to the result
   substitute(X, Y, Tail, Result).
 % Example: substitute(2, 3, [1, 2, 2, 2, 3, 2], X). => X = [1, 3, 3, 3, 3, 3]
@@ -25,9 +27,11 @@ substitute(X, Y, [Head | Tail], [Head | Result]):- % If the head of the list is 
 % if the head of the list is a member of the result varible if it is a member then it is not
 % added to the list otherwise it is added to the result list.
 eliminate_duplicates([],[]). % Base case where the list is empty
+
 eliminate_duplicates([Head | Tail],[Head |Result]):- % Iterates through the list and append head if it is not a member
   eliminate_duplicates(Tail , Result),
   not(member(Head ,Result)).
+
 eliminate_duplicates([Head | Tail], Result):- % Iterates through the list and remove head if it is already in result
   eliminate_duplicates(Tail , Result),
   not(member(Head , Result)).
@@ -37,9 +41,11 @@ eliminate_duplicates([Head | Tail], Result):- % Iterates through the list and re
 % and check if its head is a member of the second list, if that statement is true, then add the
 % Head to the resulting list otherwise discard the head and continue iterating.
 intersect([], _, []). % Base case where the first list is empty, the second list doesn't matter and the result is empty.
+
 intersect([Head | Tail], List, [Head | Result]):- % If the head of the first list is a member of the second list add it to result.
   member(Head , List),
   intersect(Tail, List, Result).
+
 intersect([_ | Tail], List, Result):- % Else discard it, and continue with the next element.
   intersect(Tail, List, Result).
 % Example: intersect([a, b, c, d], [b, d, e, f], X). => X = [b, d]
@@ -48,6 +54,7 @@ intersect([_ | Tail], List, Result):- % Else discard it, and continue with the n
 % at the start of a new list, and then it will continue iterating the list. The new list will then
 % be then the result of the function.
 invert([], []). % Base case where both lists are empty.
+
 invert([Head | Tail], Result):-
   append(New_List, [Head], Result),
   invert(Tail, New_List).
@@ -56,9 +63,11 @@ invert([Head | Tail], Result):-
 % Function that receives a value X, a list and a variable and it iterates through the list and
 % adds the head of the list to the result only if it is less than the given value X.
 less_than(_, [], []). % Base case where it doesn't matter the X value, but the two lists are empty
+
 less_than(X, [Head | Tail], [Head | Result]):- % If the head is less than X add it to the result.
   Head < X,
   less_than(X, Tail, Result).
+
 less_than(X, [_|Tail], Result):- % Else continue with the next element.
   less_than(X, Tail, Result).
 % Example: less_then(5, [1, 6, 5, 2, 7], X). => X = [1, 2]
@@ -66,11 +75,13 @@ less_than(X, [_|Tail], Result):- % Else continue with the next element.
 % Function that receives a value X, a list and a variable and it iterates through the list and
 % adds the head of the list to the result if it is bigger or equal to the given X value.
 more_than(_, [], []). % Base case where it doesn't matter the X value, but the two lists are empty.
+
 more_than(X, [Head | Tail], [Head | Result]):- % If the head is bigger or equal to X.
   Head > X,
   more_than(X, Tail, Result);
   Head = X,
   more_than(X, Tail, Result).
+
 more_than(X, [_ | Tail], Result):- % Else discard the head and continue with the next element.
   more_than(X, Tail, Result).
 % Example: more_than((5, [1, 6, 5, 2, 7], X). => X = [6, 5, 7]
@@ -80,11 +91,13 @@ more_than(X, [_ | Tail], Result):- % Else discard the head and continue with the
 % list if X is a positive number, and the other if it is a negative number. To achive this the head is appended to the tail
 % X times.
 rotate(List, 0, List). % Base case
+
 rotate([ Head | Tail], X, Result):- % If X is bigger than 0 then append the head to the tail and continues until X = 0
   X > 0,
   N is X - 1,
   append(Tail, [Head], NewList),
   rotate(NewList, N, Result).
+
 rotate(Tail, X, Result):- % If X is smaller than 0 then call the rotate function again with X = -X
   X < 0,
   N is -X,
@@ -133,14 +146,17 @@ road(messana, lilibeum).
 % function that passes all the values and the origin city as a list to a function called path_to
 path(Origin, Destiny, Path):-
   path_to(Origin, Destiny, [Origin], Path).
+
 path_to(Origin, Destiny, Route, Path):- % If there is a path between the origin and destination and the destination is not a member
   road(Origin, Destiny),                % of the list then append the destination to the list and call the function path_to again.
   not(member(Destiny, Route)),
   append(Route, [Destiny], NewRoute),
   path_to(Origin, Destiny, NewRoute, Path).
+
 path_to(Origin, Destiny, Route, Route):- % Base case, where there is a path between origin and destination and the destination is a
   road(Origin, Destiny),                 % member of the list then end
   member(Destiny, Route).
+
 path_to(Origin, Destiny, Route, Path):- % check recursively to other city to find a path, if the new destiny is not a part of the list
   road(Origin, AnotherDestiny),         % then append the element to the list.
   not(member(AnotherDestiny, Route)),
