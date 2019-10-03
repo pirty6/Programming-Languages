@@ -15,14 +15,16 @@ public class Turtle extends Animal implements Runnable{
 
   public void run() {
     Random random = new Random();
-    while(current_length < race_length) {
+    while(current_length < race_length && !Thread.currentThread().isInterrupted()) {
+      int ran;
       if(turtle_speed == -1){
-        current_length += random.nextInt((10 - 3) + 1) + 3;
+        ran = random.nextInt((10 - 3) + 1) + 3;
       } else {
-        current_length += turtle_speed;
+        ran = turtle_speed;
       }
+      current_length += ran;
+      System.out.println("The turtle ran " + ran + " mts. Total = " + current_length);
     }
     finish = true;
-    System.out.println("The turtle won the race!");
   }
 }

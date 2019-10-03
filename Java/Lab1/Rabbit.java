@@ -15,16 +15,20 @@ public class Rabbit extends Animal implements Runnable {
 
   public void run() {
     Random random = new Random();
-    while(current_length < race_length) {
-      //System.out.println(current_length);
-      current_length += random.nextInt((1000 - 500) + 1) + 500;
+    while(current_length < race_length && !Thread.currentThread().isInterrupted()) {
+      int ran = random.nextInt((1000 - 500) + 1) + 500;
+      current_length += ran;
+      System.out.println("The rabbit ran " + ran + " mts. Total = " + current_length);
+      if(current_length >= race_length) break;
       try {
+        System.out.println("The rabbit is sleeping...");
         Thread.sleep(sleeping_time);
+        System.out.println("The rabbit woke up");
       } catch(InterruptedException ex) {
+        System.out.println("The rabbit did not finished the race");
         Thread.currentThread().interrupt();
       }
     }
     finish = true;
-    System.out.println("The rabbit won the race!");
   }
 }

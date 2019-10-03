@@ -12,24 +12,30 @@ public class Race {
     this.turtle = new Turtle(race_length, turtle_speed);
   }
 
-  public void run() throws InterruptedException{
+  public void run() {
     Thread r = new Thread(rabbit);
     Thread t = new Thread(turtle);
     t.start();
     r.start();
-    while(r.isAlive() && t.isAlive()) {
-      System.out.println(rabbit.get_finished());
-        r.join(100);
-        t.join(100);
-        if(rabbit.get_finished()) {
-          t.interrupt();
-          t.join();
-          break;
-        }
-        if(turtle.get_finished()) {
-          r.interrupt();
-          r.join();
-          break;
+    while(!t.isInterrupted() && !r.isInterrupted()) {
+        try {
+          r.join(100);
+          t.join(100);
+          if(rabbit.get_finished()) {
+            System.out.println("The rabbit won the race!");
+            t.interrupt();
+            t.join();
+            break;
+          }
+          if(turtle.get_finished()) {
+            System.out.println("The turtle won the race!");
+            r.interrupt();
+            r.join();
+            break;
+          }
+        }catch(InterruptedException e) {
+          if(t.isAlive()) t.interrupt();
+          if(r.isAlive()) r.interrupt();
         }
     }
     System.out.println("The race has finished");
@@ -45,12 +51,9 @@ public class Race {
     }*/
 
     System.out.println("Second race");
-    Race race2 = new Race(1_000_000_000, 0, 5);
-    try {
-      race2.run();
-    } catch(InterruptedException e) {
-      e.printStackTrace();
-    }
+    Race race2 = new Race(1_000, 0, 0);
+    race2.run();
+
 
   }
 }
