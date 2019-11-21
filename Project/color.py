@@ -1,61 +1,211 @@
-import os
+import keras
+from keras.preprocessing import image
+from keras.engine import Layer
+from keras.layers import Conv2D, Conv3D, UpSampling2D, InputLayer, Conv2DTranspose, Input, Reshape, merge, concatenate
+from keras.layers import Activation, Dense, Dropout, Flatten
+from keras.layers.normalization import BatchNormalization
+from keras.callbacks import TensorBoard
+from keras.models import Sequential, Model
+from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
+from keras.utils import multi_gpu_model
+from skimage.color import rgb2lab, lab2rgb, rgb2gray, gray2rgb
+from skimage.transform import resize
+from skimage.io import imsave
+from skimage import img_as_ubyte
 import time
 import numpy as np
+import os
+import random
+import tensorflow as tf
+from PIL import Image, ImageFile
 
-from keras.models import Sequential
-from keras.layers import Conv2D, Conv2DTranspose, InputLayer, UpSampling2D
-from keras.layers import Flatten, BatchNormalization, Dense, Activation, Dropout
-from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
+import matplotlib
+from matplotlib import pyplot as plt
+import matplotlib.image as mpimg
 
-from skimage.io import imsave
-from skimage.color import rgb2lab, lab2rgb, rgb2gray, xyz2lab
+# General path
+PATH = '/content/gdrive/My Drive/Coloring/'
 
-DATASET_PATH = './Train/foxes.jpg'
-BATCH_SIZE = 1
-IMAGE_SHAPE = (400, 400, 3)
-EPOCHS = 1000
+# Training path
+TRAINING_PATH = PATH + 'Train/Data256/'
 
-def load_dataset(dataset_path):
-    image = img_to_array(load_img(dataset_path))
-    image = np.array(image, dtype=float)
-    X = rgb2lab(1.0/255*image)[:,:,0]
-    Y = rgb2lab(1.0/255*image)[:,:,1:]
-    Y /= 128
-    X = X.reshape(1, 400, 400, 1)
-    Y = Y.reshape(1, 400, 400, 2)
-    return X, Y
+# Test path
+TESTING_PATH = PATH + 'Train/Test256/'
 
-def construct_generator():
-    model = Sequential()
-    model.add(InputLayer(input_shape=(None, None, 1)))
-    model.add(Conv2D(8, (3, 3), activation='relu', padding='same', strides=2))
-    model.add(Conv2D(8, (3, 3), activation='relu', padding='same'))
-    model.add(Conv2D(16, (3, 3), activation='relu', padding='same'))
-    model.add(Conv2D(16, (3, 3), activation='relu', padding='same', strides=2))
-    model.add(Conv2D(32, (3, 3), activation='relu', padding='same'))
-    model.add(Conv2D(32, (3, 3), activation='relu', padding='same', strides=2))
-    model.add(UpSampling2D((2, 2)))
-    model.add(Conv2D(32, (3, 3), activation='relu', padding='same'))
-    model.add(UpSampling2D((2, 2)))
-    model.add(Conv2D(16, (3, 3), activation='relu', padding='same'))
-    model.add(UpSampling2D((2, 2)))
-    model.add(Conv2D(2, (3, 3), activation='tanh', padding='same'))
-    return model
+# Get the total number of images to train the network
+NO_IMAGES = 7000
 
-def train_model(batch_size, epochs, image_shape, dataset_path):
-    generator = construct_generator()
-    generator.compile(optimizer = 'rmsprop', loss = 'mse')
-    X, Y = load_dataset(DATASET_PATH)
-    generator.fit(x = X, y = Y, batch_size = batch_size, epochs = epochs)
-    print(generator.evaluate(X, Y, batch_size = batch_size))
-    output = generator.predict(X)
-    output *= 128
+NO_EPOCHS = 1000
+BATCH_SIZE = 64
+TARGET_SIZE = (224,224)
 
-    cur = np.zeros(image_shape)
-    cur[:,:,0] = X[0][:,:,0]
-    cur[:,:,1:] = output[0]
-    imsave('./Results/img_result.png', lab2rgb(cur))
-    imsave('./Results/img_gray_version.png', rgb2gray(lab2rgb(cur)))
+print('Starting...')
+# Get start time
+start_time = time.time()
 
-if __name__ == '__main__':
-    train_model(BATCH_SIZE, EPOCHS, IMAGE_SHAPE, DATASET_PATH)
+# Download VGG16 model to use as transfer learning for the encoder
+vggmodel = keras.applications.vgg16.VGG16()
+newmodel = Sequential()
+
+# The last layers of the VGG16 are pooling layers so we create a new model
+# to get rid of them and just end up with a new model with already pre-defined
+# weigths that outputs an image of 7x7 with 512 filters
+for i, layer in enumerate(vggmodel.layers):
+    if i<19:
+      newmodel.add(layer)
+newmodel.summary()
+for layer in newmodel.layers:
+  # Set the layers to trainable false in order to not change the pre-defined
+  # weights
+  layer.trainable=False
+
+# Create a generator that will normalize all the images between -1 and 1
+# and it will also perform some data augmentation
+data = ImageDataGenerator(rescale=1. / 255,
+                          shear_range=0.2,
+                          zoom_range=0.2,
+                          rotation_range=20,
+                          horizontal_flip=True
+                          )
+
+# Generator that will only generate new batches of the training data
+train_datagen = ImageDataGenerator()
+
+# Get the images from the training directory and resize all of them into images
+# of 224x224 because that is the size that VGG16 takes as input
+train = data.flow_from_directory(TRAINING_PATH,
+                                 target_size = TARGET_SIZE,
+                                 batch_size = NO_IMAGES,
+                                 shuffle = True,
+                                 class_mode = None)
+
+X =[]
+Y =[]
+print("Finished gathering images...")
+for i,img in enumerate(train[0]):
+  # Convert rgb into lab image, a lab image is a color space that separates
+  # the lightness from color
+  lab = rgb2lab(img)
+  # Add L (Lightness) channel to X
+  X.append(lab[:,:,0])
+  # Add ab (red/green and yellow/blue) channel to Y and divide Y by 128
+  #because the range of values of ab channel is between (-127, 128)
+  Y.append(lab[:,:,1:] / 128)
+  if i == 3:
+    imsave(PATH + 'original.jpg', img);
+    imsave(PATH + 'l.jpg', lab);
+    imsave(PATH + 'l_layer.jpg', lab[:,:,0])
+    imsave(PATH + 'a_layer.jpg', lab[:,:,1])
+    imsave(PATH + 'b_layer.jpg', lab[:,:,2])
+
+X = np.array(X)
+Y = np.array(Y)
+
+# Reshape X so that Y and X have the same dimensions
+X = X.reshape(X.shape+(1,))
+print(X.shape)
+print(Y.shape)
+
+vggfeatures = []
+for i, sample in enumerate(X):
+  # Turn X (Lightness layer) to black and white
+  sample = gray2rgb(sample)
+  # Reshape the 256x256 into images of 224x224 with 1 filter and 3 channels
+  sample = sample.reshape((1,224,224,3))
+  # Predict sample with VGG16
+  prediction = newmodel.predict(sample)
+  prediction = prediction.reshape((7,7,512))
+  vggfeatures.append(prediction)
+vggfeatures = np.array(vggfeatures)
+print(vggfeatures.shape)
+
+# Create the network
+#Encoder
+encoder_input = Input(shape=(7, 7, 512,))
+
+# #Decoder
+decoder_output = Conv2D(256, (3,3), activation='relu', padding='same')(encoder_input)
+decoder_output = Conv2D(128, (3,3), activation='relu', padding='same')(decoder_output)
+decoder_output = UpSampling2D((2, 2))(decoder_output)
+decoder_output = Conv2D(64, (3,3), activation='relu', padding='same')(decoder_output)
+decoder_output = UpSampling2D((2, 2))(decoder_output)
+decoder_output = Conv2D(32, (3,3), activation='relu', padding='same')(decoder_output)
+decoder_output = UpSampling2D((2, 2))(decoder_output)
+decoder_output = Conv2D(16, (3,3), activation='relu', padding='same')(decoder_output)
+decoder_output = UpSampling2D((2, 2))(decoder_output)
+decoder_output = Conv2D(2, (3, 3), activation='tanh', padding='same')(decoder_output)
+decoder_output = UpSampling2D((2, 2))(decoder_output)
+
+model = Model(inputs=encoder_input, outputs=decoder_output)
+model.summary()
+
+# Replicates the model from the CPU to all of our GPUs, thereby obtaining
+# single-machine multi-GPU data parallelism
+# Divide the models inputs into multiple sub-batches
+# Apply a model copy on each sub-batch. Every model copy is executed on a dedicated GPU
+# Concatenate the results into one big batch in the CPU
+# If batch_size is 64 and you use GPU = 2, then we will divide the input into 2 sub-batches
+# of 32 samples, process each sub-batch on one GPU then return the full batch of 64
+# processed samples
+try:
+ model = multi_gpu_model(model, cpu_relocation = True)
+ print("Training using multiple GPUs")
+except ValueError:
+ print("Training using single GPU or CPU")
+
+model.compile(optimizer='Adam', loss='mse' , metrics=['accuracy'])
+
+
+history = model.fit_generator(train_datagen.flow(vggfeatures, Y, batch_size = BATCH_SIZE),
+                    epochs = NO_EPOCHS,
+                    steps_per_epoch = NO_IMAGES // BATCH_SIZE,
+                    workers=4, use_multiprocessing=False
+                    )
+
+# Save the final weights
+model.save(PATH + 'data/model2.h5')
+
+# Get the images in the testing directory
+testpath = TESTING_PATH
+files = os.listdir(testpath)
+for idx, file in enumerate(files):
+  # Convert them into an array and resize them into 224x224 and normalize them
+  test = img_to_array(load_img(testpath+file))
+  test = resize(test, TARGET_SIZE, anti_aliasing=True)
+  test*= 1.0/255
+  # Turn the images into lab images
+  lab = rgb2lab(test)
+  # get l layer and and turn it to black and white and reshape it
+  l = lab[:,:,0]
+  L = gray2rgb(l)
+  L = L.reshape((1,224,224,3))
+  # Pass the images through the VGG16 and encoder
+  vggpred = newmodel.predict(L)
+  # Pass the images through the decoder
+  ab = model.predict(vggpred)
+  # multiply ab values * 128 to change all the values to rgb ranges
+  ab = ab*128
+  # Allocate space for new image
+  cur = np.zeros((224, 224, 3))
+  # Add the L  and ab layer to position 0 of the new image
+  cur[:,:,0] = l
+  cur[:,:,1:] = ab
+  # Pass image from lab to rgb
+  image = lab2rgb(cur)
+  # Save the image
+  imsave(PATH + 'Results/Results256/result'+str(idx)+".jpg", img_as_ubyte(image))
+
+print('Finished')
+
+# Print the total of time training
+print("--- %s seconds ---" % (time.time() - start_time))
+
+acc = history.history['acc']
+loss = history.history['loss']
+epochs = range(1, len(acc) + 1)
+plt.plot(epochs, acc, 'b', label='Training acc')
+plt.plot(epochs, loss, 'r', label='Training loss')
+plt.title('Training Accuracy and Loss')
+plt.legend()
+plt.figure()
+plt.show()
