@@ -2,7 +2,10 @@
 Code generated for the Programming Languages course
 
 -----
-
+    
+    Encoder-Decoder Neural Network and its performance in colouring black and 
+    white images and the use of parallelization techniques to improve the 
+    waiting times during training.
     Copyright 2019 © Mariana Pérez @pirty6
     Programming Languages, ITESM.
     A01206747 for ITESM
@@ -19,3 +22,16 @@ Code generated for the Programming Languages course
     
 
 -----
+
+To run the Coloring Network:
+
+```bash
+    cd Project
+    pip install -r requirements.txt
+    python3 color.py
+```
+
+## Examples of the generated images with their grayscale counterpart:
+
+![alt text](https://github.com/pirty6/Programming-Languages/blob/master/Project/results1.png)
+![alt text](https://github.com/pirty6/Programming-Languages/blob/master/Project/results2.png)
