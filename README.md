@@ -23,9 +23,10 @@ Project and code generated for the Programming Languages course
 
 -----
 
-To run the Coloring Network:
+## Installation 
 
-```bash
+```
+    git clone https://github.com/pirty6/Programming-Languages.git
     cd Project
     pip install -r requirements.txt
     python3 color.py
@@ -33,5 +34,7 @@ To run the Coloring Network:
 
 ## Examples of the generated images with their grayscale counterpart:
 
-![alt text](https://github.com/pirty6/Programming-Languages/blob/master/Project/results1.png)
-![alt text](https://github.com/pirty6/Programming-Languages/blob/master/Project/results2.png)
+<p align="center">
+    <img src="https://github.com/pirty6/Programming-Languages/blob/master/Project/results1.png">
+    <img src="https://github.com/pirty6/Programming-Languages/blob/master/Project/results2.png">
+</p>
