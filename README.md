@@ -32,7 +32,7 @@ Project and code generated for the Programming Languages course
     python3 color.py
 ```
 
-## Examples of the generated images with their grayscale counterpart:
+## Generated Images:
 
 <p align="center">
     <img src="https://github.com/pirty6/Programming-Languages/blob/master/Project/results1.png">
