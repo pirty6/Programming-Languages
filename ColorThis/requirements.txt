@@ -1,0 +1,7 @@
+Keras==2.2.5
+Keras-Preprocessing==1.1.0
+matplotlib-venn==0.11.5
+numpy==1.17.4
+Pillow==4.3.0
+scikit-image==0.15.0
+tensorflow-gpu==1.15.0
