@@ -62,6 +62,8 @@ def construct_decoder():
 
     model = Model(inputs = encoder_input, outputs = decoder_output)
     model.summary()
+    model.compile(optimizer='Adam', loss='mse' , metrics=['accuracy'])
+
     return model
 
 def construct_encoder():
@@ -148,7 +150,7 @@ def train(training_path, no_images, no_epochs, batch_size, target_size, weights_
     print(vggfeatures.shape)
 
     # Create the network
-    model = construct_encoder_decoder()
+    model = construct_decoder()
 
     # Replicates the model from the CPU to all of our GPUs, thereby obtaining
     # single-machine multi-GPU data parallelism
@@ -171,9 +173,6 @@ def train(training_path, no_images, no_epochs, batch_size, target_size, weights_
         parallel_model = multi_gpu_model(model, gpus=2)
         parallel_model.compile(optimizer='Adam', loss='mse', metrics=['accuracy'])
     """
-
-    model.compile(optimizer='Adam', loss='mse' , metrics=['accuracy'])
-
 
     history = model.fit_generator(train_datagen.flow(vggfeatures, Y, batch_size = BATCH_SIZE),
                         epochs = no_epochs,
