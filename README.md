@@ -7,7 +7,7 @@ Project and code generated for the Programming Languages course
 
 ```
     git clone https://github.com/pirty6/Programming-Languages.git
-    cd Project
+    cd ColorThis
     pip install -r requirements.txt
     python3 color.py
 ```
