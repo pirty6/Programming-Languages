@@ -1,5 +1,5 @@
-# Programming-Languages
-Code generated for the Programming Languages course
+# Color This - Programming Languages
+Project and code generated for the Programming Languages course
 
 -----
     
