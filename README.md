@@ -1,7 +1,7 @@
 # Color This - Programming Languages
 Project and code generated for the Programming Languages course
 
-**A detailed explanation of the project can be found here:** [Color This](https://github.com/pirty6/Programming-Languages/blob/master/Project/ColorThis.pdf)
+**A detailed explanation of the project can be found here:** [Color This](https://github.com/pirty6/Programming-Languages/blob/master/ColorThis/ColorThis.pdf)
 
 ## Installation 
 
@@ -15,7 +15,7 @@ Project and code generated for the Programming Languages course
 ## Generated Images:
 
 <p align="center">
-    <img src="https://github.com/pirty6/Programming-Languages/blob/master/Project/results.jpg">
+    <img src="https://github.com/pirty6/Programming-Languages/blob/master/ColorThis/results.jpg">
 </p>
 
 ## Acknowledgements
