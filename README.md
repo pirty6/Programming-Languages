@@ -37,8 +37,7 @@ Project and code generated for the Programming Languages course
 ## Generated Images:
 
 <p align="center">
-    <img src="https://github.com/pirty6/Programming-Languages/blob/master/Project/results1.png">
-    <img src="https://github.com/pirty6/Programming-Languages/blob/master/Project/results2.png">
+    <img src="https://github.com/pirty6/Programming-Languages/blob/master/Project/results.jpg">
 </p>
 
 ## Acknowledgements
